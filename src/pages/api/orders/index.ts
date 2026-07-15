@@ -3,6 +3,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { getMergedGames } from '../../../data/catalog';
 
+export const prerender = false;
+
 interface OrderInput {
   gameSlug?: unknown;
   productLabel?: unknown;
@@ -60,7 +62,13 @@ const ALLOWED_RECEIPT_TYPES = new Map<string, string>([
   ['image/webp', 'webp'],
 ]);
 
-const jsonHeaders = { 'Content-Type': 'application/json' };
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+const jsonHeaders = { 'Content-Type': 'application/json', ...corsHeaders };
 
 const jsonResponse = (body: Record<string, unknown>, status: number) =>
   new Response(JSON.stringify(body), {
@@ -160,6 +168,8 @@ const generateOrderId = (orders: Array<{ id?: unknown }>) => {
 
   throw new Error('Se alcanzo el limite de IDs de orden disponibles (JP-99999).');
 };
+
+export const OPTIONS: APIRoute = async () => new Response(null, { status: 204, headers: corsHeaders });
 
 export const GET: APIRoute = async () => {
   const orders = await parseOrdersFile();
