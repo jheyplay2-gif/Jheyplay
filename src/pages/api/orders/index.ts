@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { getMergedGames } from '../../data/catalog';
+import { getMergedGames } from '../../../data/catalog';
 
 interface OrderInput {
   gameSlug?: unknown;
