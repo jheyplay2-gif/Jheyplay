@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" role="img" aria-labelledby="title desc">
+  <title id="title">League of Legends</title>
+  <desc id="desc">Imagen de portada de League of Legends</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffd54f"/>
+      <stop offset="100%" stop-color="#bf360c"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#g)"/>
+  <text x="50%" y="48%" font-family="Arial, sans-serif" font-size="82" text-anchor="middle" fill="#ffffff" font-weight="700">LEAGUE OF</text>
+  <text x="50%" y="58%" font-family="Arial, sans-serif" font-size="82" text-anchor="middle" fill="#ffffff" font-weight="700">LEGENDS</text>
+</svg>

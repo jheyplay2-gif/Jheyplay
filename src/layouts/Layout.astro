@@ -1,0 +1,42 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'Jhey Play | Webs con estrategia y diseño',
+	description = 'Diseño y desarrollo web moderno para marcas que quieren convertir visitas en clientes.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<title>{title}</title>
+	</head>
+	<body>
+		<header class="site-header">
+			<div class="container nav-wrap">
+				<a class="brand" href="/" aria-label="Ir al inicio">Jhey Play</a>
+			</div>
+		</header>
+
+		<slot />
+
+		<footer class="site-footer">
+			<div class="container footer-wrap">
+				<p>© {new Date().getFullYear()} Jhey Play</p>
+				<p>Base desarrollada con Astro</p>
+			</div>
+		</footer>
+	</body>
+</html>

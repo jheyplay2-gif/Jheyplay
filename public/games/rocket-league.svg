@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Rocket League</title>
+  <desc id="desc">Imagen de portada de Rocket League</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4dd0e1"/>
+      <stop offset="100%" stop-color="#004d40"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#g)"/>
+  <text x="50%" y="52%" font-family="Arial, sans-serif" font-size="100" text-anchor="middle" fill="#ffffff" font-weight="700">ROCKET LEAGUE</text>
+</svg>

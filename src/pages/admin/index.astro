@@ -1,0 +1,1424 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Admin | Jhey Play" description="Panel admin para ordenes y productos.">
+  <main class="section">
+    <div class="container admin-page">
+      <header class="admin-header">
+        <h1>Panel Admin</h1>
+        <p>Gestiona ordenes y productos desde un solo lugar.</p>
+      </header>
+
+      <nav class="admin-window-nav" aria-label="Tareas del panel admin" role="tablist">
+        <button class="admin-window-tab is-active" id="tab-orders" type="button" role="tab" aria-selected="true" aria-controls="window-orders" data-window-target="orders">Ordenes</button>
+        <button class="admin-window-tab" id="tab-exchange-rate" type="button" role="tab" aria-selected="false" aria-controls="window-exchange-rate" data-window-target="exchange-rate">Tasa dolar</button>
+        <button class="admin-window-tab" id="tab-games" type="button" role="tab" aria-selected="false" aria-controls="window-games" data-window-target="games">Juegos</button>
+        <button class="admin-window-tab" id="tab-products" type="button" role="tab" aria-selected="false" aria-controls="window-products" data-window-target="products">Productos</button>
+      </nav>
+
+      <section class="admin-section admin-window is-active" id="window-orders" role="tabpanel" aria-labelledby="tab-orders" data-window="orders">
+        <div class="section-head-row">
+          <h2 id="orders-title">Ordenes</h2>
+          <button class="btn btn-secondary" id="reload-orders" type="button">Recargar</button>
+        </div>
+        <p id="orders-message" role="status" aria-live="polite"></p>
+        <div class="table-wrap">
+          <table class="admin-table" id="orders-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Juego</th>
+                <th>Producto</th>
+                <th>Jugador</th>
+                <th>Pago</th>
+                <th>Comprobante</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="orders-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-section admin-window" id="window-exchange-rate" role="tabpanel" aria-labelledby="tab-exchange-rate" data-window="exchange-rate" hidden>
+        <div class="section-head-row">
+          <h2 id="exchange-rate-title">Tasa del dolar</h2>
+        </div>
+        <p id="exchange-rate-message" role="status" aria-live="polite"></p>
+        <form id="exchange-rate-form" class="exchange-rate-form">
+          <label>
+            1 USD en bolivares
+            <input id="exchange-rate-input" name="rate" type="number" min="0.01" step="0.01" required />
+          </label>
+          <button class="btn btn-primary" type="submit">Guardar tasa</button>
+        </form>
+      </section>
+
+      <section class="admin-section admin-window" id="window-games" role="tabpanel" aria-labelledby="tab-games" data-window="games" hidden>
+        <div class="section-head-row">
+          <h2 id="games-title">Juegos</h2>
+          <button class="btn btn-secondary" id="reload-games" type="button">Recargar</button>
+        </div>
+        <p id="games-message" role="status" aria-live="polite"></p>
+        <form id="create-game-form" class="create-game-form-admin">
+          <h3>Crear juego</h3>
+          <label>
+            Nombre
+            <input type="text" name="name" maxlength="90" placeholder="Ejemplo: EA FC Mobile" required />
+          </label>
+          <label>
+            Slug (opcional)
+            <input type="text" name="slug" maxlength="90" placeholder="ejemplo: ea-fc-mobile" />
+          </label>
+          <label>
+            Descripcion
+            <textarea name="description" rows="2" maxlength="220" placeholder="Describe el juego brevemente" required></textarea>
+          </label>
+          <label>
+            URL de portada (opcional)
+            <input type="text" name="image" maxlength="200" placeholder="/games/mi-juego.webp" />
+          </label>
+          <button class="btn btn-primary" type="submit">Crear juego</button>
+        </form>
+        <div id="games-list" class="games-list"></div>
+      </section>
+
+      <section class="admin-section admin-window" id="window-products" role="tabpanel" aria-labelledby="tab-products" data-window="products" hidden>
+        <div class="section-head-row">
+          <h2 id="products-title">Productos</h2>
+          <button class="btn btn-secondary" id="reload-products" type="button">Recargar</button>
+        </div>
+        <p id="products-message" role="status" aria-live="polite"></p>
+        <div id="products-list" class="products-list"></div>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const ordersBody = document.querySelector('#orders-body');
+  const ordersMessage = document.querySelector('#orders-message');
+  const exchangeRateMessage = document.querySelector('#exchange-rate-message');
+  const exchangeRateForm = document.querySelector('#exchange-rate-form');
+  const exchangeRateInput = document.querySelector('#exchange-rate-input');
+  const gamesMessage = document.querySelector('#games-message');
+  const gamesList = document.querySelector('#games-list');
+  const createGameForm = document.querySelector('#create-game-form');
+  const productsMessage = document.querySelector('#products-message');
+  const productsList = document.querySelector('#products-list');
+  const reloadOrdersButton = document.querySelector('#reload-orders');
+  const reloadGamesButton = document.querySelector('#reload-games');
+  const reloadProductsButton = document.querySelector('#reload-products');
+  const windowTabs = Array.from(document.querySelectorAll('.admin-window-tab'));
+  const windows = Array.from(document.querySelectorAll('.admin-window'));
+  let currentExchangeRate = 0;
+
+  const setupWindowTabs = () => {
+    if (windowTabs.length === 0 || windows.length === 0) {
+      return;
+    }
+
+    const setActiveWindow = (windowName) => {
+      windowTabs.forEach((tab) => {
+        const isActive = tab.dataset.windowTarget === windowName;
+        tab.classList.toggle('is-active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      windows.forEach((windowNode) => {
+        const isActive = windowNode.dataset.window === windowName;
+        windowNode.classList.toggle('is-active', isActive);
+        windowNode.hidden = !isActive;
+      });
+    };
+
+    windowTabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.windowTarget;
+        if (!target) {
+          return;
+        }
+
+        setActiveWindow(target);
+      });
+    });
+  };
+
+  const setMessage = (node, text, isError = false) => {
+    if (!node) {
+      return;
+    }
+
+    node.textContent = text;
+    node.style.color = isError ? '#b91c1c' : '#166534';
+  };
+
+  const escapeHtml = (value) =>
+    String(value)
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+
+  const formatCurrency = (value) => Number(value ?? 0).toFixed(2);
+
+  const renderOrders = (orders) => {
+    if (!ordersBody) {
+      return;
+    }
+
+    if (!Array.isArray(orders) || orders.length === 0) {
+      ordersBody.innerHTML = '<tr><td colspan="8">No hay ordenes registradas.</td></tr>';
+      return;
+    }
+
+    ordersBody.innerHTML = orders
+      .map((order) => {
+        const createdAt = new Date(order.createdAt).toLocaleString();
+        const status = order.status ?? 'pendiente';
+        const receiptUrl = typeof order.receiptUrl === 'string' ? order.receiptUrl.trim() : '';
+        const receiptCell = receiptUrl
+          ? `
+              <a class="btn btn-secondary receipt-open-btn" href="${escapeHtml(receiptUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Abrir comprobante de la orden ${escapeHtml(order.id ?? '')}">
+                Abrir
+              </a>
+            `
+          : '<span class="receipt-missing">Sin archivo</span>';
+
+        return `
+          <tr>
+            <td>${escapeHtml(order.id ?? '-')}</td>
+            <td>${escapeHtml(createdAt)}</td>
+            <td>${escapeHtml(order.gameName ?? order.gameSlug ?? '-')}</td>
+            <td>${escapeHtml(order.product?.label ?? '-')}</td>
+            <td>${escapeHtml(order.playerId ?? '-')}</td>
+            <td>${escapeHtml(order.paymentMethod ?? '-')}</td>
+            <td>${receiptCell}</td>
+            <td>${escapeHtml(status)}</td>
+          </tr>
+        `;
+      })
+      .join('');
+  };
+
+  const fetchOrders = async () => {
+    setMessage(ordersMessage, 'Cargando ordenes...');
+
+    try {
+      const response = await fetch('/api/orders');
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message ?? 'No se pudieron cargar las ordenes.');
+      }
+
+      renderOrders(data.orders);
+      setMessage(ordersMessage, `Ordenes cargadas: ${data.orders.length}.`);
+    } catch (error) {
+      renderOrders([]);
+      setMessage(ordersMessage, error instanceof Error ? error.message : 'Error cargando ordenes.', true);
+    }
+  };
+
+  const renderGamesAdmin = (games) => {
+    if (!gamesList) {
+      return;
+    }
+
+    if (!Array.isArray(games) || games.length === 0) {
+      gamesList.innerHTML = '<p>No hay juegos disponibles.</p>';
+      return;
+    }
+
+    gamesList.innerHTML = games
+      .map((game) => {
+        const slug = escapeHtml(game.slug);
+
+        return `
+          <article class="game-admin-row" data-game-slug="${slug}">
+            <img class="game-admin-thumb" src="${escapeHtml(game.image)}" alt="Portada de ${escapeHtml(game.name)}" loading="lazy" />
+            <div class="game-admin-info">
+              <strong>${escapeHtml(game.name)}</strong>
+              <span>Slug: ${slug}</span>
+              <small>${escapeHtml(game.description ?? 'Sin descripcion')}</small>
+            </div>
+            <button class="btn btn-secondary delete-game-btn" type="button">Eliminar juego</button>
+          </article>
+        `;
+      })
+      .join('');
+
+    const deleteButtons = gamesList.querySelectorAll('.delete-game-btn');
+    deleteButtons.forEach((button) => {
+      button.addEventListener('click', async (event) => {
+        const target = event.currentTarget;
+        if (!(target instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        const row = target.closest('.game-admin-row');
+        if (!(row instanceof HTMLElement)) {
+          return;
+        }
+
+        const gameSlug = row.dataset.gameSlug ?? '';
+        setMessage(gamesMessage, `Eliminando juego ${gameSlug}...`);
+
+        try {
+          const response = await fetch('/api/games', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ gameSlug }),
+          });
+
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message ?? 'No se pudo eliminar el juego.');
+          }
+
+          setMessage(gamesMessage, `Juego eliminado: ${gameSlug}.`);
+          fetchProducts();
+        } catch (error) {
+          setMessage(gamesMessage, error instanceof Error ? error.message : 'Error eliminando juego.', true);
+        }
+      });
+    });
+  };
+
+  const renderProducts = (games) => {
+    if (!productsList) {
+      return;
+    }
+
+    if (!Array.isArray(games) || games.length === 0) {
+      productsList.innerHTML = '<p>No hay juegos para mostrar.</p>';
+      return;
+    }
+
+    productsList.innerHTML = games
+      .map((game) => {
+        const totalProducts = Array.isArray(game.products) ? game.products.length : 0;
+        const rows = (game.products ?? [])
+          .map((product) => {
+            const slug = escapeHtml(game.slug);
+            const label = escapeHtml(product.label);
+            const activeChecked = product.active ? 'checked' : '';
+            const bsValue = formatCurrency(product.bs);
+
+            return `
+              <form class="product-row" data-game-slug="${slug}" data-product-label="${label}">
+                <div class="product-name">
+                  <strong>${label}</strong>
+                  <span>${bsValue} Bs calculados con tasa ${formatCurrency(currentExchangeRate)}</span>
+                </div>
+                <label>
+                  USD
+                  <input type="number" name="usd" min="0" step="0.01" value="${Number(product.usd)}" required />
+                </label>
+                <div class="calculated-bs">
+                  <span>Bs calculados</span>
+                  <strong>${bsValue}</strong>
+                </div>
+                <label class="active-toggle">
+                  Activo
+                  <input type="checkbox" name="active" ${activeChecked} />
+                </label>
+                <div class="product-actions">
+                  <button class="btn btn-primary" type="submit">Guardar</button>
+                  <button class="btn btn-secondary delete-product-btn" type="button">Eliminar</button>
+                </div>
+              </form>
+            `;
+          })
+          .join('');
+
+        return `
+          <section class="product-game-block">
+            <div class="product-game-head">
+              <div>
+                <h3>${escapeHtml(game.name)}</h3>
+                <p>${totalProducts} producto(s) disponible(s)</p>
+              </div>
+            </div>
+            <div class="game-cover-admin">
+              <img class="game-cover-preview" src="${escapeHtml(game.image)}" alt="Portada de ${escapeHtml(game.name)}" loading="lazy" />
+              <form class="game-cover-form" data-game-slug="${escapeHtml(game.slug)}">
+                <h4>Portada del juego</h4>
+                <label>
+                  Subir nueva imagen
+                  <input
+                    type="file"
+                    name="coverImage"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    required
+                  />
+                </label>
+                <button class="btn btn-secondary" type="submit">Guardar portada</button>
+              </form>
+            </div>
+            <div class="product-group-list">${rows || '<p class="empty-products">No hay productos creados para este juego.</p>'}</div>
+            <form class="create-product-form" data-game-slug="${escapeHtml(game.slug)}">
+              <h4>Crear producto</h4>
+              <label>
+                Nombre
+                <input type="text" name="productLabel" maxlength="80" placeholder="Ejemplo: 2800 V-Bucks" required />
+              </label>
+              <label>
+                USD
+                <input type="number" name="usd" min="0" step="0.01" required />
+              </label>
+              <div class="calculated-bs calculated-bs-create">
+                <span>Bs calculados</span>
+                <strong data-role="bs-preview">0.00</strong>
+              </div>
+              <label class="active-toggle">
+                Activo
+                <input type="checkbox" name="active" checked />
+              </label>
+              <button class="btn btn-primary" type="submit">Crear</button>
+            </form>
+            <form class="bulk-upload-form" data-game-slug="${escapeHtml(game.slug)}">
+              <h4>Cargar productos por tabla</h4>
+              <p class="bulk-upload-help">Archivo CSV con columnas: productLabel, usd, active (opcional).</p>
+              <label>
+                Selecciona archivo
+                <input type="file" name="productsTable" accept=".csv,text/csv" required />
+              </label>
+              <button class="btn btn-secondary" type="submit">Subir tabla</button>
+            </form>
+          </section>
+        `;
+      })
+      .join('');
+
+    const forms = productsList.querySelectorAll('.product-row');
+    forms.forEach((form) => {
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const row = event.currentTarget;
+        if (!(row instanceof HTMLFormElement)) {
+          return;
+        }
+
+        const gameSlug = row.dataset.gameSlug ?? '';
+        const productLabel = row.dataset.productLabel ?? '';
+        const usdInput = row.querySelector('input[name="usd"]');
+        const activeInput = row.querySelector('input[name="active"]');
+
+        if (!(usdInput instanceof HTMLInputElement) || !(activeInput instanceof HTMLInputElement)) {
+          setMessage(productsMessage, 'No se pudieron leer los datos del formulario.', true);
+          return;
+        }
+
+        const payload = {
+          gameSlug,
+          productLabel,
+          usd: Number(usdInput.value),
+          active: activeInput.checked,
+        };
+
+        setMessage(productsMessage, `Guardando cambios para ${productLabel}...`);
+
+        try {
+          const response = await fetch('/api/products', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message ?? 'No se pudo guardar el producto.');
+          }
+
+          setMessage(productsMessage, `Producto actualizado: ${productLabel}.`);
+          fetchProducts();
+        } catch (error) {
+          setMessage(productsMessage, error instanceof Error ? error.message : 'Error guardando producto.', true);
+        }
+      });
+    });
+
+    const createForms = productsList.querySelectorAll('.create-product-form');
+    createForms.forEach((form) => {
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const row = event.currentTarget;
+        if (!(row instanceof HTMLFormElement)) {
+          return;
+        }
+
+        const gameSlug = row.dataset.gameSlug ?? '';
+        const labelInput = row.querySelector('input[name="productLabel"]');
+        const usdInput = row.querySelector('input[name="usd"]');
+        const activeInput = row.querySelector('input[name="active"]');
+
+        if (!(labelInput instanceof HTMLInputElement) || !(usdInput instanceof HTMLInputElement) || !(activeInput instanceof HTMLInputElement)) {
+          setMessage(productsMessage, 'No se pudieron leer los datos del nuevo producto.', true);
+          return;
+        }
+
+        const productLabel = labelInput.value.trim();
+
+        setMessage(productsMessage, `Creando producto ${productLabel || 'nuevo'}...`);
+
+        try {
+          const response = await fetch('/api/products', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              gameSlug,
+              productLabel,
+              usd: Number(usdInput.value),
+              active: activeInput.checked,
+            }),
+          });
+
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message ?? 'No se pudo crear el producto.');
+          }
+
+          row.reset();
+          const resetActiveInput = row.querySelector('input[name="active"]');
+          if (resetActiveInput instanceof HTMLInputElement) {
+            resetActiveInput.checked = true;
+          }
+
+          setMessage(productsMessage, `Producto creado: ${productLabel}.`);
+          fetchProducts();
+        } catch (error) {
+          setMessage(productsMessage, error instanceof Error ? error.message : 'Error creando producto.', true);
+        }
+      });
+    });
+
+    const deleteButtons = productsList.querySelectorAll('.delete-product-btn');
+    deleteButtons.forEach((button) => {
+      button.addEventListener('click', async (event) => {
+        const target = event.currentTarget;
+        if (!(target instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        const row = target.closest('.product-row');
+        if (!(row instanceof HTMLFormElement)) {
+          return;
+        }
+
+        const gameSlug = row.dataset.gameSlug ?? '';
+        const productLabel = row.dataset.productLabel ?? '';
+
+        setMessage(productsMessage, `Eliminando ${productLabel}...`);
+
+        try {
+          const response = await fetch('/api/products', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ gameSlug, productLabel }),
+          });
+
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message ?? 'No se pudo eliminar el producto.');
+          }
+
+          setMessage(productsMessage, `Producto eliminado: ${productLabel}.`);
+          fetchProducts();
+        } catch (error) {
+          setMessage(productsMessage, error instanceof Error ? error.message : 'Error eliminando producto.', true);
+        }
+      });
+    });
+
+    const coverForms = productsList.querySelectorAll('.game-cover-form');
+    coverForms.forEach((form) => {
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const row = event.currentTarget;
+        if (!(row instanceof HTMLFormElement)) {
+          return;
+        }
+
+        const gameSlug = row.dataset.gameSlug ?? '';
+        const fileInput = row.querySelector('input[name="coverImage"]');
+
+        if (!(fileInput instanceof HTMLInputElement) || !fileInput.files || fileInput.files.length === 0) {
+          setMessage(productsMessage, 'Selecciona una imagen para la portada.', true);
+          return;
+        }
+
+        const imageFile = fileInput.files[0];
+        setMessage(productsMessage, `Subiendo portada para ${gameSlug}...`);
+
+        try {
+          const body = new FormData();
+          body.append('gameSlug', gameSlug);
+          body.append('coverImage', imageFile);
+
+          const response = await fetch('/api/games', {
+            method: 'PUT',
+            body,
+          });
+
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.message ?? 'No se pudo actualizar la portada.');
+          }
+
+          setMessage(productsMessage, `Portada actualizada para ${gameSlug}.`);
+          fetchProducts();
+        } catch (error) {
+          setMessage(productsMessage, error instanceof Error ? error.message : 'Error subiendo portada.', true);
+        }
+      });
+    });
+
+    const syncBsPreview = (form) => {
+      const usdInput = form.querySelector('input[name="usd"]');
+      const preview = form.querySelector('[data-role="bs-preview"]');
+
+      if (!(usdInput instanceof HTMLInputElement) || !(preview instanceof HTMLElement)) {
+        return;
+      }
+
+      const usd = Number(usdInput.value);
+      const value = Number.isFinite(usd) ? usd * currentExchangeRate : 0;
+      preview.textContent = formatCurrency(value);
+    };
+
+    createForms.forEach((form) => {
+      syncBsPreview(form);
+      form.querySelector('input[name="usd"]')?.addEventListener('input', () => {
+        syncBsPreview(form);
+      });
+    });
+
+    const normalizeHeader = (value) =>
+      String(value)
+        .trim()
+        .toLowerCase()
+        .replaceAll(' ', '')
+        .replaceAll('_', '')
+        .replaceAll('-', '');
+
+    const parseBooleanField = (value, fallbackValue) => {
+      const normalized = String(value ?? '')
+        .trim()
+        .toLowerCase();
+
+      if (['true', '1', 'si', 'yes', 'activo', 'on'].includes(normalized)) {
+        return true;
+      }
+
+      if (['false', '0', 'no', 'inactivo', 'off'].includes(normalized)) {
+        return false;
+      }
+
+      return fallbackValue;
+    };
+
+    const parseDelimitedLine = (line, delimiter) => {
+      const cells = [];
+      let current = '';
+      let isQuoted = false;
+
+      for (let index = 0; index < line.length; index += 1) {
+        const char = line[index];
+
+        if (char === '"') {
+          const next = line[index + 1];
+          if (isQuoted && next === '"') {
+            current += '"';
+            index += 1;
+          } else {
+            isQuoted = !isQuoted;
+          }
+          continue;
+        }
+
+        if (char === delimiter && !isQuoted) {
+          cells.push(current.trim());
+          current = '';
+          continue;
+        }
+
+        current += char;
+      }
+
+      cells.push(current.trim());
+      return cells;
+    };
+
+    const parseProductsTable = (rawText) => {
+      const content = String(rawText ?? '').replace(/^\uFEFF/, '').trim();
+      if (!content) {
+        throw new Error('El archivo esta vacio.');
+      }
+
+      const lines = content
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      if (lines.length < 2) {
+        throw new Error('La tabla debe incluir encabezados y al menos una fila.');
+      }
+
+      const firstLine = lines[0];
+      const commaCount = (firstLine.match(/,/g) ?? []).length;
+      const semicolonCount = (firstLine.match(/;/g) ?? []).length;
+      const tabCount = (firstLine.match(/\t/g) ?? []).length;
+
+      let delimiter = ',';
+      if (semicolonCount > commaCount && semicolonCount >= tabCount) {
+        delimiter = ';';
+      } else if (tabCount > commaCount && tabCount > semicolonCount) {
+        delimiter = '\t';
+      }
+
+      const headers = parseDelimitedLine(firstLine, delimiter).map(normalizeHeader);
+
+      const findColumn = (aliases) => headers.findIndex((header) => aliases.includes(header));
+
+      const labelIndex = findColumn(['productlabel', 'label', 'producto', 'nombre']);
+      const usdIndex = findColumn(['usd', 'preciousd', 'priceusd']);
+      const activeIndex = findColumn(['active', 'activo', 'estado']);
+
+      if (labelIndex < 0 || usdIndex < 0) {
+        throw new Error('Faltan columnas requeridas: productLabel, usd.');
+      }
+
+      const parsedRows = [];
+
+      lines.slice(1).forEach((line, rowOffset) => {
+        const cells = parseDelimitedLine(line, delimiter);
+        const label = (cells[labelIndex] ?? '').trim();
+        const usdRaw = String(cells[usdIndex] ?? '').trim();
+        const usd = Number(usdRaw);
+        const active = parseBooleanField(cells[activeIndex], true);
+
+        const isEmptyRow = !label && !usdRaw;
+        if (isEmptyRow) {
+          return;
+        }
+
+        if (!label) {
+          throw new Error(`Fila ${rowOffset + 2}: productLabel vacio.`);
+        }
+
+        if (!Number.isFinite(usd) || usd < 0) {
+          throw new Error(`Fila ${rowOffset + 2}: usd invalido.`);
+        }
+
+        parsedRows.push({
+          productLabel: label,
+          usd,
+          active,
+        });
+      });
+
+      return parsedRows;
+    };
+
+    const bulkForms = productsList.querySelectorAll('.bulk-upload-form');
+    bulkForms.forEach((form) => {
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const row = event.currentTarget;
+        if (!(row instanceof HTMLFormElement)) {
+          return;
+        }
+
+        const gameSlug = row.dataset.gameSlug ?? '';
+        const fileInput = row.querySelector('input[name="productsTable"]');
+
+        if (!(fileInput instanceof HTMLInputElement) || !fileInput.files || fileInput.files.length === 0) {
+          setMessage(productsMessage, 'Selecciona un archivo CSV para cargar.', true);
+          return;
+        }
+
+        setMessage(productsMessage, `Procesando tabla para ${gameSlug}...`);
+
+        let rows = [];
+        try {
+          const file = fileInput.files[0];
+          const content = await file.text();
+          rows = parseProductsTable(content);
+        } catch (error) {
+          setMessage(productsMessage, error instanceof Error ? error.message : 'No se pudo leer la tabla.', true);
+          return;
+        }
+
+        if (rows.length === 0) {
+          setMessage(productsMessage, 'La tabla no contiene filas validas para cargar.', true);
+          return;
+        }
+
+        let createdCount = 0;
+        const failedRows = [];
+
+        for (const item of rows) {
+          try {
+            const response = await fetch('/api/products', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                gameSlug,
+                productLabel: item.productLabel,
+                usd: item.usd,
+                active: item.active,
+              }),
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+              throw new Error(data.message ?? 'Error creando producto.');
+            }
+
+            createdCount += 1;
+          } catch (error) {
+            const message = error instanceof Error ? error.message : 'Error creando producto.';
+            failedRows.push(`${item.productLabel}: ${message}`);
+          }
+        }
+
+        row.reset();
+
+        if (failedRows.length > 0) {
+          const preview = failedRows.slice(0, 3).join(' | ');
+          const remaining = failedRows.length > 3 ? ` (+${failedRows.length - 3} mas)` : '';
+          setMessage(
+            productsMessage,
+            `Carga completada para ${gameSlug}: ${createdCount} creado(s), ${failedRows.length} con error. ${preview}${remaining}`,
+            true,
+          );
+        } else {
+          setMessage(productsMessage, `Carga completada para ${gameSlug}: ${createdCount} producto(s) creado(s).`);
+        }
+
+        if (createdCount > 0) {
+          fetchProducts();
+        }
+      });
+    });
+  };
+
+  const fetchProducts = async () => {
+    setMessage(productsMessage, 'Cargando productos...');
+
+    try {
+      const response = await fetch('/api/games');
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message ?? 'No se pudieron cargar los productos.');
+      }
+
+      currentExchangeRate = Number(data.exchangeRate ?? 0);
+      if (exchangeRateInput instanceof HTMLInputElement) {
+        exchangeRateInput.value = formatCurrency(currentExchangeRate);
+      }
+
+      renderGamesAdmin(data.games);
+      setMessage(gamesMessage, `Juegos disponibles: ${data.games.length}.`);
+      renderProducts(data.games);
+      setMessage(productsMessage, 'Productos cargados correctamente.');
+    } catch (error) {
+      if (gamesList) {
+        gamesList.innerHTML = '<p>Error cargando juegos.</p>';
+      }
+      setMessage(gamesMessage, error instanceof Error ? error.message : 'Error cargando juegos.', true);
+      if (productsList) {
+        productsList.innerHTML = '<p>Error cargando productos.</p>';
+      }
+      setMessage(productsMessage, error instanceof Error ? error.message : 'Error cargando productos.', true);
+    }
+  };
+
+  exchangeRateForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (!(exchangeRateInput instanceof HTMLInputElement)) {
+      setMessage(exchangeRateMessage, 'No se pudo leer la tasa.', true);
+      return;
+    }
+
+    const rate = Number(exchangeRateInput.value);
+    setMessage(exchangeRateMessage, 'Guardando tasa...');
+
+    try {
+      const response = await fetch('/api/exchange-rate', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rate }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message ?? 'No se pudo guardar la tasa.');
+      }
+
+      currentExchangeRate = Number(data.rate ?? rate);
+      exchangeRateInput.value = formatCurrency(currentExchangeRate);
+      setMessage(exchangeRateMessage, `Tasa actualizada: 1 USD = ${formatCurrency(currentExchangeRate)} Bs.`);
+      fetchProducts();
+    } catch (error) {
+      setMessage(exchangeRateMessage, error instanceof Error ? error.message : 'Error guardando la tasa.', true);
+    }
+  });
+
+  reloadOrdersButton?.addEventListener('click', () => {
+    fetchOrders();
+  });
+
+  createGameForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    if (!(form instanceof HTMLFormElement)) {
+      return;
+    }
+
+    const nameInput = form.querySelector('input[name="name"]');
+    const slugInput = form.querySelector('input[name="slug"]');
+    const descriptionInput = form.querySelector('textarea[name="description"]');
+    const imageInput = form.querySelector('input[name="image"]');
+
+    if (
+      !(nameInput instanceof HTMLInputElement) ||
+      !(slugInput instanceof HTMLInputElement) ||
+      !(descriptionInput instanceof HTMLTextAreaElement) ||
+      !(imageInput instanceof HTMLInputElement)
+    ) {
+      setMessage(gamesMessage, 'No se pudieron leer los datos del nuevo juego.', true);
+      return;
+    }
+
+    const name = nameInput.value.trim();
+    const slug = slugInput.value.trim();
+    const description = descriptionInput.value.trim();
+    const image = imageInput.value.trim();
+
+    setMessage(gamesMessage, `Creando juego ${name || 'nuevo'}...`);
+
+    try {
+      const response = await fetch('/api/games', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, slug, description, image }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message ?? 'No se pudo crear el juego.');
+      }
+
+      form.reset();
+      setMessage(gamesMessage, `Juego creado: ${name}.`);
+      fetchProducts();
+    } catch (error) {
+      setMessage(gamesMessage, error instanceof Error ? error.message : 'Error creando juego.', true);
+    }
+  });
+
+  reloadGamesButton?.addEventListener('click', () => {
+    fetchProducts();
+  });
+
+  reloadProductsButton?.addEventListener('click', () => {
+    fetchProducts();
+  });
+
+  setupWindowTabs();
+  fetchOrders();
+  fetchProducts();
+</script>
+
+<style>
+  .admin-page {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .admin-header h1 {
+    margin-bottom: 0.25rem;
+  }
+
+  .admin-header p {
+    margin: 0;
+  }
+
+  .admin-window-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+  }
+
+  .admin-window-tab {
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    background: #fff;
+    color: #1e293b;
+    font: inherit;
+    font-weight: 600;
+    padding: 0.55rem 0.95rem;
+    cursor: pointer;
+    transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, transform 180ms ease;
+  }
+
+  .admin-window-tab:hover {
+    border-color: #8d0fde;
+    transform: translateY(-1px);
+  }
+
+  .admin-window-tab.is-active {
+    border-color: #8d0fde;
+    background: #8d0fde;
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(141, 15, 222, 0.22);
+  }
+
+  .admin-section {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1.1rem;
+    background: #fff;
+  }
+
+  .admin-window {
+    border-color: #d8b4fe;
+    box-shadow: 0 16px 35px rgba(11, 1, 61, 0.08);
+  }
+
+  .admin-window:not(.is-active) {
+    display: none;
+  }
+
+  .exchange-rate-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: end;
+  }
+
+  .exchange-rate-form label {
+    display: grid;
+    gap: 0.35rem;
+    min-width: min(100%, 260px);
+    font-size: 0.9rem;
+    color: #334155;
+  }
+
+  .exchange-rate-form input {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.6rem 0.7rem;
+  }
+
+  .section-head-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-head-row h2 {
+    margin: 0;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    padding: 0.65rem;
+    font-size: 0.95rem;
+  }
+
+  .receipt-open-btn {
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  .receipt-open-btn:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  .receipt-missing {
+    color: #64748b;
+    font-size: 0.85rem;
+  }
+
+  .products-list {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .create-game-form-admin {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    align-items: end;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #f8fafc;
+  }
+
+  .create-game-form-admin h3 {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .create-game-form-admin label {
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: #334155;
+  }
+
+  .create-game-form-admin input,
+  .create-game-form-admin textarea {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.55rem 0.65rem;
+    font: inherit;
+    background: #fff;
+  }
+
+  .create-game-form-admin textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+
+  .create-game-form-admin .btn {
+    width: fit-content;
+  }
+
+  .games-list {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .game-admin-row {
+    display: grid;
+    grid-template-columns: 70px 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.6rem;
+    background: #fff;
+  }
+
+  .game-admin-thumb {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+  }
+
+  .game-admin-info {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .game-admin-info strong {
+    color: #0f172a;
+  }
+
+  .game-admin-info span,
+  .game-admin-info small {
+    color: #475569;
+  }
+
+  .product-game-block {
+    display: grid;
+    gap: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1rem;
+    background: #f8fafc;
+  }
+
+  .product-game-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 0.75rem;
+  }
+
+  .product-game-head h3 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  .product-game-head p {
+    margin-top: 0.2rem;
+    color: #475569;
+  }
+
+  .product-group-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .game-cover-admin {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 0.85rem;
+    align-items: stretch;
+  }
+
+  .game-cover-preview {
+    width: 140px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+  }
+
+  .game-cover-form {
+    display: grid;
+    gap: 0.65rem;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 0.75rem;
+    background: #fff;
+    align-content: start;
+  }
+
+  .game-cover-form h4 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .game-cover-form label {
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: #334155;
+  }
+
+  .game-cover-form input[type='file'] {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.45rem;
+    background: #fff;
+  }
+
+  .product-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.6fr) minmax(90px, 0.9fr) minmax(120px, 0.9fr) minmax(90px, 0.8fr) auto;
+    gap: 0.75rem;
+    align-items: end;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.75rem;
+  }
+
+  .product-name {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .product-name span {
+    font-size: 0.9rem;
+    color: #475569;
+  }
+
+  .product-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .product-row label {
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: #334155;
+  }
+
+  .product-row input[type='number'] {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .calculated-bs {
+    display: grid;
+    gap: 0.25rem;
+    align-self: stretch;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 0.65rem 0.7rem;
+    background: #fff;
+  }
+
+  .calculated-bs span {
+    font-size: 0.8rem;
+    color: #475569;
+  }
+
+  .calculated-bs strong {
+    font-size: 1rem;
+    color: #0f172a;
+  }
+
+  .create-product-form {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.7fr) minmax(90px, 0.9fr) minmax(120px, 0.9fr) minmax(90px, 0.8fr) auto;
+    gap: 0.75rem;
+    align-items: end;
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 1rem;
+  }
+
+  .create-product-form h4 {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .create-product-form label {
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: #334155;
+  }
+
+  .create-product-form input[type='number'],
+  .create-product-form input[type='text'] {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+  }
+
+  .bulk-upload-form {
+    display: grid;
+    gap: 0.65rem;
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  .bulk-upload-form h4 {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  .bulk-upload-help {
+    color: #475569;
+    font-size: 0.86rem;
+  }
+
+  .bulk-upload-form label {
+    display: grid;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: #334155;
+    max-width: 420px;
+  }
+
+  .bulk-upload-form input[type='file'] {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    padding: 0.4rem;
+  }
+
+  .empty-products {
+    color: #475569;
+  }
+
+  .active-toggle {
+    align-items: center;
+    justify-items: start;
+  }
+
+  @media (max-width: 920px) {
+    .admin-window-nav {
+      gap: 0.5rem;
+    }
+
+    .admin-window-tab {
+      flex: 1 1 calc(50% - 0.5rem);
+      text-align: center;
+    }
+
+    .create-game-form-admin {
+      grid-template-columns: 1fr;
+    }
+
+    .game-admin-row {
+      grid-template-columns: 1fr;
+      justify-items: start;
+    }
+
+    .game-cover-admin {
+      grid-template-columns: 1fr;
+    }
+
+    .game-cover-preview {
+      width: 100%;
+      max-width: 220px;
+      height: auto;
+      aspect-ratio: 1 / 1;
+    }
+
+    .product-row,
+    .create-product-form {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .product-row .product-actions,
+    .create-product-form .btn {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

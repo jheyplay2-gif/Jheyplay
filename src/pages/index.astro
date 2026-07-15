@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getMergedGames } from '../data/catalog';
+
+const { mergedGames } = await getMergedGames();
+---
+
+<Layout
+	title="Jhey Play | Base web en Astro"
+	description="Base inicial para crear un sitio web moderno en Astro con estructura clara y diseño responsive."
+>
+	<main id="inicio">
+		<section id="juegos" class="section">
+			<div class="container">
+				<div class="section-head">
+					<p class="eyebrow">Catálogo</p>
+					<h2>Explora nuestros juegos disponibles</h2>
+				</div>
+				<div class="game-grid">
+					{
+						mergedGames.map((game) => (
+							<a class="game-card" href={`/juegos/${game.slug}`} aria-label={`Ir a ${game.name}`}>
+								<img src={game.image} alt={`Portada de ${game.name}`} loading="lazy" />
+								<h3>{game.name}</h3>
+							</a>
+						))
+					}
+				</div>
+			</div>
+		</section>
+	</main>
+</Layout>

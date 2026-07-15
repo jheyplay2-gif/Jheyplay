@@ -1,0 +1,102 @@
+[
+  {
+    "id": "0a14e7f2-c652-4b58-a64e-7ccf0cbcba97",
+    "createdAt": "2026-07-15T14:05:15.767Z",
+    "gameSlug": "fortnite",
+    "gameName": "Fortnite",
+    "playerId": "123456789",
+    "paymentMethod": "paypal",
+    "product": {
+      "label": "100 V-Bucks",
+      "usd": 1,
+      "bs": 700
+    }
+  },
+  {
+    "id": "6a8b3a06-55c4-4b12-bde6-82970c7eb32b",
+    "createdAt": "2026-07-15T14:05:19.289Z",
+    "gameSlug": "fortnite",
+    "gameName": "Fortnite",
+    "playerId": "123456789",
+    "paymentMethod": "paypal",
+    "product": {
+      "label": "100 V-Bucks",
+      "usd": 1,
+      "bs": 700
+    }
+  },
+  {
+    "id": "94a9ceb5-69ee-419d-bc7a-a916a2c9a0a2",
+    "createdAt": "2026-07-15T14:40:35.246Z",
+    "gameSlug": "free-fire",
+    "gameName": "Free fire",
+    "playerId": "123456789",
+    "playerName": "jhey.30",
+    "contact": "04143740874",
+    "paymentMethod": "pago_movil",
+    "receiptUrl": "/receipts/receipt-94a9ceb5-69ee-419d-bc7a-a916a2c9a0a2.webp",
+    "status": "pendiente-validacion",
+    "product": {
+      "label": "100 diamantes",
+      "usd": 0.98,
+      "bs": 784,
+      "stock": 0,
+      "active": true
+    }
+  },
+  {
+    "id": "f997f599-9784-46d1-bbe6-ca2b6ff22f2a",
+    "createdAt": "2026-07-15T14:42:22.279Z",
+    "gameSlug": "free-fire",
+    "gameName": "Free fire",
+    "playerId": "123456789",
+    "playerName": "jhey.30",
+    "contact": "04143740874",
+    "paymentMethod": "pago_movil",
+    "receiptUrl": "/receipts/receipt-f997f599-9784-46d1-bbe6-ca2b6ff22f2a.webp",
+    "status": "pendiente-validacion",
+    "product": {
+      "label": "100 diamantes",
+      "usd": 0.98,
+      "bs": 784,
+      "stock": 0,
+      "active": true
+    }
+  },
+  {
+    "id": "abf94701-8b6c-4b1e-94e3-fd337633e62d",
+    "createdAt": "2026-07-15T15:01:46.379Z",
+    "gameSlug": "blood-striker",
+    "gameName": "blood striker",
+    "playerId": "12345678",
+    "playerName": "jhey.30",
+    "contact": "jhey.play2",
+    "paymentMethod": "pago_movil",
+    "receiptUrl": "/receipts/receipt-abf94701-8b6c-4b1e-94e3-fd337633e62d.webp",
+    "status": "pendiente-validacion",
+    "product": {
+      "label": "100 oro",
+      "usd": 0.88,
+      "bs": 704,
+      "stock": 0,
+      "active": true
+    }
+  },
+  {
+    "id": "JP-00001",
+    "createdAt": "2026-07-15T15:22:44.493Z",
+    "gameSlug": "blood-striker",
+    "gameName": "blood striker",
+    "playerId": "12345678",
+    "paymentMethod": "pago_movil",
+    "receiptUrl": "/receipts/receipt-JP-00001.webp",
+    "status": "pendiente-validacion",
+    "product": {
+      "label": "100 oro",
+      "usd": 0.88,
+      "bs": 704,
+      "stock": 0,
+      "active": true
+    }
+  }
+]

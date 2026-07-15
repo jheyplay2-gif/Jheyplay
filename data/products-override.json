@@ -1,0 +1,275 @@
+[
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🟡 50 + 1 Barras de oro",
+    "usd": 0.54,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🟡 100 + 5 Barras de oro",
+    "usd": 0.86,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🟡 300 + 20 Barras de oro",
+    "usd": 2.55,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🟡 500 + 40 Barras de oro",
+    "usd": 4.25,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🟡 1000 + 100 Barras de oro",
+    "usd": 8.45,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🟡 2000 + 260 Barras de oro",
+    "usd": 16.95,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🟡 5000 + 800 Barras de oro",
+    "usd": 42.35,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🧰 Cofre especial de aspecto ultra",
+    "usd": 0.52,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "💳 Pase de mejora",
+    "usd": 2,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "💳 Pase elite",
+    "usd": 4,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "💳 Pase premium",
+    "usd": 9.1,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🛍️ Bolsa Semanal de la Suerte",
+    "usd": 1,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🛍️ Bolsa Semanal de la Suerte de One Punch Man",
+    "usd": 1,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🎟️ Pase de Temporada",
+    "usd": 0.99,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🎟️ Oferta: 199Deal",
+    "usd": 1.85,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🎟️ Oferta: 299Deal",
+    "usd": 2.8,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🎟️ Cupon de valor destacado One Punch Man x10",
+    "usd": 0.9,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🎟️ Cofre de Puntos de One Punch Man",
+    "usd": 1.85,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "blood-striker",
+    "productLabel": "🎫 Habilitar la Cornucopia",
+    "usd": 2,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💎 100 + 10 Diamantes",
+    "usd": 0.98,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💎 200 + 20 Diamantes",
+    "usd": 1.96,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💎 310 + 31 Diamantes",
+    "usd": 3,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💎 520 + 52 Diamantes",
+    "usd": 4.6,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💎 830 + 83 Diamantes",
+    "usd": 7.6,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💎 1060 + 106 Diamantes",
+    "usd": 8.65,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💎 1580 + 158 Diamantes",
+    "usd": 13.25,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💎 2180 + 218 Diamantes",
+    "usd": 17.3,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💎 5600 + 560 Diamantes",
+    "usd": 44,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Pase booyah",
+    "usd": 3.5,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Tarjeta básica",
+    "usd": 0.7,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Tarjeta semanal",
+    "usd": 2.3,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Tarjeta mensual",
+    "usd": 11,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Aumento de nivel 6",
+    "usd": 0.5,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Aumento de nivel 10",
+    "usd": 0.7,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Aumento de nivel 15",
+    "usd": 0.7,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Aumento de nivel 20",
+    "usd": 0.7,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Aumento de nivel 25",
+    "usd": 0.7,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "💳 Aumento de nivel 30",
+    "usd": 1,
+    "stock": 0,
+    "active": true
+  },
+  {
+    "gameSlug": "free-fire",
+    "productLabel": "🎫 Todos los paquetes de Aumento",
+    "usd": 4.15,
+    "stock": 0,
+    "active": true
+  }
+]

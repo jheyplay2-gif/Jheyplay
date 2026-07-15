@@ -1,0 +1,263 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getMergedGames } from '../../data/catalog';
+
+const slug = Astro.params.slug ?? '';
+const { mergedGames } = await getMergedGames();
+const gameFromSlug = mergedGames.find((item) => item.slug === slug);
+
+if (!gameFromSlug) {
+  return Astro.redirect('/');
+}
+
+const game = gameFromSlug;
+const availableProducts = game.products.filter((product) => product.active);
+const whatsappPhone = '584147052300';
+const paymentMethodLabel = 'Pago movil';
+const paymentBank = 'Banco de Venezuela';
+const paymentDocument = '30885279';
+const paymentPhone = '04247384795';
+---
+
+<Layout title={`${game.name} | Juegos`} description={game.description}>
+  <main class="section">
+    <div class="container">
+      <section class="game-detail-window">
+        <div class="game-detail">
+        <a class="btn btn-secondary" href="/">Volver al inicio</a>
+        <img class="game-cover" src={game.image} alt={`Portada de ${game.name}`} loading="eager" />
+        <h1>{game.name}</h1>
+        <p class="lead">{game.description}</p>
+        </div>
+
+      <div class="purchase-card" aria-label="Formulario de compra">
+        <h2>Finalizar compra</h2>
+        <p>Selecciona tu paquete, ingresa tu ID de jugador, realiza el pago y finaliza tu pedido por WhatsApp.</p>
+
+        <form
+          class="purchase-form"
+          id="purchase-form"
+          data-game-slug={game.slug}
+          data-game-name={game.name}
+          data-whatsapp-phone={whatsappPhone}
+        >
+          <fieldset class="package-fieldset">
+            <legend>1. Selecciona tu paquete</legend>
+            <div class="package-grid">
+              {
+                availableProducts.map((pack) => (
+                  <label class="package-option" aria-label={`Producto ${pack.label}`}>
+                    <input
+                      type="radio"
+                      name="productLabel"
+                      value={pack.label}
+                      data-product-bs={pack.bs}
+                      data-product-usd={pack.usd}
+                      required
+                    />
+                    <span>
+                      <strong>{pack.label}</strong>
+                      <small>{pack.bs} Bs • {pack.usd} $</small>
+                    </span>
+                  </label>
+                ))
+              }
+            </div>
+          </fieldset>
+
+          <fieldset class="package-fieldset">
+            <legend>2. Datos del jugador</legend>
+            <label class="form-label" for="player-id">ID del juego</label>
+            <input class="form-input" id="player-id" name="playerId" type="text" placeholder="Ejemplo: 123456789" required />
+          </fieldset>
+
+          <fieldset class="package-fieldset payment-section">
+            <legend>3. Pantalla de pago</legend>
+            <p class="payment-amount">Monto exacto: <strong id="selected-amount">Selecciona un paquete</strong></p>
+            <div class="payment-box">
+              <p><strong>Metodo:</strong> {paymentMethodLabel}</p>
+              <p><strong>Banco:</strong> {paymentBank}</p>
+              <p><strong>CI:</strong> {paymentDocument}</p>
+              <p><strong>Telefono:</strong> {paymentPhone}</p>
+            </div>
+            <button class="btn btn-secondary copy-payment-btn" type="button" id="copy-payment-data">Copiar datos de pago movil</button>
+          </fieldset>
+
+          <fieldset class="package-fieldset">
+            <legend>4. Carga tu comprobante</legend>
+            <label class="form-label" for="payment-receipt">Captura del pago</label>
+            <input class="form-input" id="payment-receipt" name="receipt" type="file" accept="image/jpeg,image/png,image/webp" required />
+          </fieldset>
+
+          <button class="btn btn-primary purchase-btn" type="submit">Finalizar Pedido por WhatsApp</button>
+        </form>
+
+        <p id="order-message" role="status" aria-live="polite"></p>
+      </div>
+      </section>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const form = document.querySelector('#purchase-form');
+  const messageNode = document.querySelector('#order-message');
+  const selectedAmountNode = document.querySelector('#selected-amount');
+  const productInputs = document.querySelectorAll('input[name="productLabel"]');
+  const copyPaymentDataButton = document.querySelector('#copy-payment-data');
+  const paymentDataText = [
+    'Metodo: Pago movil',
+    'Banco: Banco de Venezuela',
+    'CI: 30885279',
+    'Telefono: 04247384795',
+  ].join('\n');
+
+  const setMessage = (text, isError = false) => {
+    if (!messageNode) {
+      return;
+    }
+
+    messageNode.textContent = text;
+    messageNode.style.color = isError ? '#b91c1c' : '#166534';
+  };
+
+  const updateSelectedAmount = () => {
+    if (!(selectedAmountNode instanceof HTMLElement)) {
+      return;
+    }
+
+    const selectedProduct = document.querySelector('input[name="productLabel"]:checked');
+    if (!(selectedProduct instanceof HTMLInputElement)) {
+      selectedAmountNode.textContent = 'Selecciona un paquete';
+      return;
+    }
+
+    const bs = selectedProduct.dataset.productBs ?? '0';
+    const usd = selectedProduct.dataset.productUsd ?? '0';
+    selectedAmountNode.textContent = `${bs} Bs (${usd} $)`;
+  };
+
+  const formatText = (value) => String(value ?? '').trim();
+
+  productInputs.forEach((input) => {
+    input.addEventListener('change', updateSelectedAmount);
+  });
+
+  updateSelectedAmount();
+
+  copyPaymentDataButton?.addEventListener('click', async () => {
+    try {
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+        throw new Error('Tu navegador no permite copiar automaticamente.');
+      }
+
+      await navigator.clipboard.writeText(paymentDataText);
+      setMessage('Datos de pago movil copiados al portapapeles.');
+    } catch {
+      setMessage('No se pudieron copiar los datos. Copialos manualmente desde la pantalla de pago.', true);
+    }
+  });
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const gameSlug = form.dataset.gameSlug ?? '';
+    const gameName = form.dataset.gameName ?? '';
+    const whatsappPhone = form.dataset.whatsappPhone ?? '';
+    const playerIdInput = form.querySelector('#player-id');
+    const receiptInput = form.querySelector('#payment-receipt');
+    const selectedProduct = form.querySelector('input[name="productLabel"]:checked');
+
+    if (
+      !(playerIdInput instanceof HTMLInputElement) ||
+      !(receiptInput instanceof HTMLInputElement) ||
+      !(selectedProduct instanceof HTMLInputElement)
+    ) {
+      setMessage('No se pudieron leer todos los datos del pedido.', true);
+      return;
+    }
+
+    if (!receiptInput.files || receiptInput.files.length === 0) {
+      setMessage('Debes subir la captura del comprobante de pago.', true);
+      return;
+    }
+
+    const playerId = formatText(playerIdInput.value);
+    const productLabel = formatText(selectedProduct.value);
+    const amountBs = formatText(selectedProduct.dataset.productBs);
+    const amountUsd = formatText(selectedProduct.dataset.productUsd);
+
+    if (!playerId || !productLabel) {
+      setMessage('Completa todos los campos obligatorios.', true);
+      return;
+    }
+
+    setMessage('Registrando pedido y preparando WhatsApp...');
+
+    try {
+      const body = new FormData();
+      body.append('gameSlug', gameSlug);
+      body.append('productLabel', productLabel);
+      body.append('playerId', playerId);
+      body.append('paymentMethod', 'pago_movil');
+      body.append('receipt', receiptInput.files[0]);
+
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        body,
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message ?? 'No se pudo registrar la orden.');
+      }
+
+      const receiptUrl = formatText(data.receiptUrl);
+      const receiptPublicUrl = receiptUrl ? new URL(receiptUrl, window.location.origin).toString() : '';
+      const orderId = formatText(data.orderId);
+      const whatsappMessage = [
+        'Hola, acabo de realizar un pedido.',
+        `Orden: ${orderId}`,
+        `Juego: ${gameName}`,
+        `Producto: ${productLabel}`,
+        `Monto pagado: ${amountBs} Bs (${amountUsd} $)`,
+        `ID del juego: ${playerId}`,
+        receiptPublicUrl ? `Comprobante: ${receiptPublicUrl}` : '',
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(whatsappMessage)}`;
+      window.open(whatsappUrl, '_blank', 'noopener');
+      setMessage(`Pedido ${orderId} listo. Te abrimos WhatsApp para finalizar.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Error de red. Intenta nuevamente.', true);
+    }
+  });
+</script>
+
+<style>
+  .payment-section {
+    border: 1px dashed rgba(141, 15, 222, 0.55);
+    border-radius: 12px;
+    padding: 0.85rem;
+    background: rgba(255, 255, 255, 0.75);
+  }
+
+  .payment-amount {
+    margin: 0 0 0.6rem;
+    color: #0f172a;
+  }
+
+  .payment-box {
+    display: grid;
+    gap: 0.35rem;
+    color: #334155;
+    font-size: 0.95rem;
+  }
+
+  .copy-payment-btn {
+    margin-top: 0.9rem;
+    width: 100%;
+  }
+</style>
