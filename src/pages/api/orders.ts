@@ -19,6 +19,41 @@ const ORDER_ID_DIGITS = 5;
 const ORDER_ID_MAX = Number('9'.repeat(ORDER_ID_DIGITS));
 const ORDER_ID_REGEX = /^JP-(\d{5})$/;
 
+const SAMPLE_ORDERS = [
+  {
+    id: 'JP-00001',
+    createdAt: '2026-07-15T14:00:00.000Z',
+    gameSlug: 'free-fire',
+    gameName: 'Free Fire',
+    playerId: '123456789',
+    paymentMethod: 'pago_movil',
+    receiptUrl: '/receipts/sample-jp-00001.png',
+    status: 'pendiente-validacion',
+    product: {
+      label: '310 Diamantes',
+      usd: 5,
+      bs: 500,
+      active: true,
+    },
+  },
+  {
+    id: 'JP-00002',
+    createdAt: '2026-07-15T16:30:00.000Z',
+    gameSlug: 'roblox',
+    gameName: 'Roblox',
+    playerId: '99887766',
+    paymentMethod: 'pago_movil',
+    receiptUrl: '/receipts/sample-jp-00002.png',
+    status: 'pendiente-validacion',
+    product: {
+      label: '800 Robux',
+      usd: 10,
+      bs: 1000,
+      active: true,
+    },
+  },
+];
+
 const ALLOWED_RECEIPT_TYPES = new Map<string, string>([
   ['image/jpeg', 'jpg'],
   ['image/png', 'png'],
@@ -128,6 +163,10 @@ const generateOrderId = (orders: Array<{ id?: unknown }>) => {
 
 export const GET: APIRoute = async () => {
   const orders = await parseOrdersFile();
+
+  if (!Array.isArray(orders) || orders.length === 0) {
+    return jsonResponse({ success: true, orders: SAMPLE_ORDERS }, 200);
+  }
 
   return jsonResponse({ success: true, orders }, 200);
 };

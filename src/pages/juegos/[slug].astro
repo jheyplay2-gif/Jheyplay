@@ -139,6 +139,24 @@ const paymentPhone = '04247384795';
 
   const formatText = (value) => String(value ?? '').trim();
 
+  const parseApiResponse = async (response) => {
+    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+
+    if (contentType.includes('application/json')) {
+      try {
+        return await response.json();
+      } catch {
+        return null;
+      }
+    }
+
+    const text = await response.text();
+    return {
+      success: false,
+      message: text || 'El servidor devolvio una respuesta no valida.',
+    };
+  };
+
   productInputs.forEach((input) => {
     input.addEventListener('change', updateSelectedAmount);
   });
@@ -207,9 +225,10 @@ const paymentPhone = '04247384795';
         body,
       });
 
-      const data = await response.json();
+      const data = await parseApiResponse(response);
       if (!response.ok || !data.success) {
-        throw new Error(data.message ?? 'No se pudo registrar la orden.');
+        const apiMessage = formatText(data?.message);
+        throw new Error(apiMessage || 'No se pudo registrar la orden.');
       }
 
       const receiptUrl = formatText(data.receiptUrl);
