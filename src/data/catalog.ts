@@ -1,134 +1,14 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { games, type Game, type GameProduct } from './games';
+import { getExchangeRate, listGameOverrides, listProductOverrides } from './store';
 
-export interface ProductOverride {
-  gameSlug: string;
-  productLabel: string;
-  usd: number;
-  stock?: number;
-  active: boolean;
-  deleted?: boolean;
-  bs?: number;
-}
+export type { GameOverride, ProductOverride } from './store';
 
-export interface GameOverride {
-  gameSlug: string;
-  image?: string;
-  name?: string;
-  description?: string;
-  custom?: boolean;
-  deleted?: boolean;
-}
-
-interface ExchangeRateConfig {
-  rate: number;
-}
-
-const productsOverridePath = join(process.cwd(), 'data', 'products-override.json');
-const gamesOverridePath = join(process.cwd(), 'data', 'games-override.json');
-const exchangeRatePath = join(process.cwd(), 'data', 'exchange-rate.json');
-const DEFAULT_EXCHANGE_RATE = 700;
 const DEFAULT_GAME_IMAGE = '/games/default-game-cover.svg';
-
-const parseProductsOverride = async (): Promise<ProductOverride[]> => {
-  try {
-    const content = await readFile(productsOverridePath, 'utf-8');
-    const parsed = JSON.parse(content);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.filter((item): item is ProductOverride => {
-      if (!item || typeof item !== 'object') {
-        return false;
-      }
-
-      const value = item as Record<string, unknown>;
-      return (
-        typeof value.gameSlug === 'string' &&
-        typeof value.productLabel === 'string' &&
-        typeof value.usd === 'number' &&
-        Number.isFinite(value.usd) &&
-        (typeof value.bs === 'undefined' || (typeof value.bs === 'number' && Number.isFinite(value.bs))) &&
-        (typeof value.stock === 'undefined' || (typeof value.stock === 'number' && Number.isInteger(value.stock))) &&
-        typeof value.active === 'boolean' &&
-        (typeof value.deleted === 'undefined' || typeof value.deleted === 'boolean')
-      );
-    });
-  } catch {
-    return [];
-  }
-};
-
-const parseGamesOverride = async (): Promise<GameOverride[]> => {
-  try {
-    const content = await readFile(gamesOverridePath, 'utf-8');
-    const parsed = JSON.parse(content);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.filter((item): item is GameOverride => {
-      if (!item || typeof item !== 'object') {
-        return false;
-      }
-
-      const value = item as Record<string, unknown>;
-      if (typeof value.gameSlug !== 'string' || value.gameSlug.trim().length === 0) {
-        return false;
-      }
-
-      if (typeof value.image !== 'undefined' && (typeof value.image !== 'string' || value.image.trim().length === 0)) {
-        return false;
-      }
-
-      if (typeof value.name !== 'undefined' && (typeof value.name !== 'string' || value.name.trim().length === 0)) {
-        return false;
-      }
-
-      if (
-        typeof value.description !== 'undefined' &&
-        (typeof value.description !== 'string' || value.description.trim().length === 0)
-      ) {
-        return false;
-      }
-
-      return (
-        (typeof value.deleted === 'undefined' || typeof value.deleted === 'boolean') &&
-        (typeof value.custom === 'undefined' || typeof value.custom === 'boolean')
-      );
-    });
-  } catch {
-    return [];
-  }
-};
-
-export const getProductsOverrideFilePath = () => productsOverridePath;
-export const getGamesOverrideFilePath = () => gamesOverridePath;
-export const getExchangeRateFilePath = () => exchangeRatePath;
-
-export const getExchangeRate = async (): Promise<number> => {
-  try {
-    const content = await readFile(exchangeRatePath, 'utf-8');
-    const parsed = JSON.parse(content) as Partial<ExchangeRateConfig>;
-
-    if (typeof parsed.rate === 'number' && Number.isFinite(parsed.rate) && parsed.rate > 0) {
-      return parsed.rate;
-    }
-  } catch {
-    return DEFAULT_EXCHANGE_RATE;
-  }
-
-  return DEFAULT_EXCHANGE_RATE;
-};
 
 const calculateBs = (usd: number, exchangeRate: number) => Math.round(usd * exchangeRate * 100) / 100;
 
 export const getMergedGames = async () => {
-  const [overrides, gameOverrides] = await Promise.all([parseProductsOverride(), parseGamesOverride()]);
+  const [overrides, gameOverrides] = await Promise.all([listProductOverrides(), listGameOverrides()]);
   const exchangeRate = await getExchangeRate();
 
   interface MutableMergedGame {

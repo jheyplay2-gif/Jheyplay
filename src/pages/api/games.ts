@@ -2,12 +2,12 @@ import type { APIRoute } from 'astro';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { games } from '../../data/games';
+import { getMergedGames } from '../../data/catalog';
 import {
-  getGamesOverrideFilePath,
-  getMergedGames,
-  getProductsOverrideFilePath,
-  type GameOverride,
-} from '../../data/catalog';
+  listGameOverrides,
+  saveGameOverrides,
+  saveProductOverrides,
+} from '../../data/store';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
@@ -46,11 +46,6 @@ const toSlug = (value: string) =>
     .replace(/^-+|-+$/g, '')
     .replace(/-{2,}/g, '-');
 
-const writeGameOverrides = async (gameOverrides: GameOverride[]) => {
-  const overrideFilePath = getGamesOverrideFilePath();
-  await writeFile(overrideFilePath, `${JSON.stringify(gameOverrides, null, 2)}\n`, 'utf-8');
-};
-
 export const GET: APIRoute = async () => {
   const { mergedGames, exchangeRate } = await getMergedGames();
 
@@ -80,7 +75,7 @@ export const PUT: APIRoute = async ({ request }) => {
     return jsonResponse({ success: false, message: 'Formato no permitido. Usa JPG, PNG, WEBP o GIF.' }, 415);
   }
 
-  const { mergedGames, gameOverrides } = await getMergedGames();
+  const [{ mergedGames }, gameOverrides] = await Promise.all([getMergedGames(), listGameOverrides()]);
   const game = mergedGames.find((item) => item.slug === gameSlug);
   if (!game) {
     return jsonResponse({ success: false, message: 'Juego no encontrado.' }, 404);
@@ -107,7 +102,7 @@ export const PUT: APIRoute = async ({ request }) => {
     deleted: false,
   });
 
-  await writeGameOverrides(nextOverrides);
+  await saveGameOverrides(nextOverrides);
 
   return jsonResponse({ success: true, message: 'Portada actualizada.', gameSlug, image }, 200);
 };
@@ -151,7 +146,7 @@ export const POST: APIRoute = async ({ request }) => {
     deleted: false,
   });
 
-  await writeGameOverrides(nextOverrides);
+  await saveGameOverrides(nextOverrides);
 
   return jsonResponse(
     {
@@ -202,10 +197,9 @@ export const DELETE: APIRoute = async ({ request }) => {
   }
 
   const nextProductOverrides = overrides.filter((item) => item.gameSlug !== gameSlug);
-  const productsOverridePath = getProductsOverrideFilePath();
-  await writeFile(productsOverridePath, `${JSON.stringify(nextProductOverrides, null, 2)}\n`, 'utf-8');
+  await saveProductOverrides(nextProductOverrides);
 
-  await writeGameOverrides(nextGameOverrides);
+  await saveGameOverrides(nextGameOverrides);
 
   return jsonResponse({ success: true, message: 'Juego eliminado.' }, 200);
 };

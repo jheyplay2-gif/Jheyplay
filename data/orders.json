@@ -98,5 +98,56 @@
       "stock": 0,
       "active": true
     }
+  },
+  {
+    "id": "JP-00002",
+    "createdAt": "2026-07-16T13:01:55.627Z",
+    "gameSlug": "blood-striker",
+    "gameName": "blood striker",
+    "playerId": "12345678",
+    "paymentMethod": "pago_movil",
+    "receiptUrl": "/receipts/receipt-JP-00002.webp",
+    "status": "pendiente-validacion",
+    "product": {
+      "label": "🟡 50 + 1 Barras de oro",
+      "usd": 0.54,
+      "bs": 432,
+      "stock": 0,
+      "active": true
+    }
+  },
+  {
+    "id": "JP-00003",
+    "createdAt": "2026-07-16T13:49:40.869Z",
+    "gameSlug": "free-fire",
+    "gameName": "Free fire",
+    "playerId": "123456789",
+    "paymentMethod": "pago_movil",
+    "receiptUrl": "/receipts/receipt-JP-00003.webp",
+    "status": "pendiente-validacion",
+    "product": {
+      "label": "💎 100 + 10 Diamantes",
+      "usd": 0.98,
+      "bs": 784,
+      "stock": 0,
+      "active": true
+    }
+  },
+  {
+    "id": "JP-00004",
+    "createdAt": "2026-07-16T13:50:32.810Z",
+    "gameSlug": "blood-striker",
+    "gameName": "blood striker",
+    "playerId": "12345678",
+    "paymentMethod": "pago_movil",
+    "receiptUrl": "/receipts/receipt-JP-00004.webp",
+    "status": "pendiente-validacion",
+    "product": {
+      "label": "🟡 50 + 1 Barras de oro",
+      "usd": 0.54,
+      "bs": 432,
+      "stock": 0,
+      "active": true
+    }
   }
 ]

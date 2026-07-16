@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
-import { writeFile } from 'node:fs/promises';
 import { games } from '../../data/games';
-import { getMergedGames, getProductsOverrideFilePath, type ProductOverride } from '../../data/catalog';
+import { getMergedGames } from '../../data/catalog';
+import { listProductOverrides, saveProductOverrides, type ProductOverride } from '../../data/store';
 
 interface UpdateProductInput {
   gameSlug?: unknown;
@@ -30,13 +30,8 @@ const getStringField = (value: unknown) => (typeof value === 'string' ? value.tr
 
 const getBooleanField = (value: unknown) => (typeof value === 'boolean' ? value : null);
 
-const writeOverrides = async (overrides: ProductOverride[]) => {
-  const overrideFilePath = getProductsOverrideFilePath();
-  await writeFile(overrideFilePath, `${JSON.stringify(overrides, null, 2)}\n`, 'utf-8');
-};
-
 const getProductContext = async (gameSlug: string, productLabel: string) => {
-  const { mergedGames, overrides } = await getMergedGames();
+  const [{ mergedGames }, overrides] = await Promise.all([getMergedGames(), listProductOverrides()]);
   const game = mergedGames.find((item) => item.slug === gameSlug);
 
   if (!game) {
@@ -85,7 +80,7 @@ export const POST: APIRoute = async ({ request }) => {
   };
 
   nextOverrides.push(newProduct);
-  await writeOverrides(nextOverrides);
+  await saveProductOverrides(nextOverrides);
 
   return jsonResponse({ success: true, message: 'Producto creado.', product: newProduct }, 201);
 };
@@ -133,7 +128,7 @@ export const PUT: APIRoute = async ({ request }) => {
     nextOverrides.push(updatedOverride);
   }
 
-  await writeOverrides(nextOverrides);
+  await saveProductOverrides(nextOverrides);
 
   return jsonResponse({ success: true, message: 'Producto actualizado.', product: updatedOverride }, 200);
 };
@@ -178,7 +173,7 @@ export const DELETE: APIRoute = async ({ request }) => {
     });
   }
 
-  await writeOverrides(nextOverrides);
+  await saveProductOverrides(nextOverrides);
 
   return jsonResponse({ success: true, message: 'Producto eliminado.' }, 200);
 };

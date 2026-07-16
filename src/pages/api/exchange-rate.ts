@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
-import { writeFile } from 'node:fs/promises';
-import { getExchangeRate, getExchangeRateFilePath } from '../../data/catalog';
+import { getExchangeRate } from '../../data/store';
+import { saveExchangeRate } from '../../data/store';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
@@ -30,7 +30,7 @@ export const PUT: APIRoute = async ({ request }) => {
     return jsonResponse({ success: false, message: 'La tasa debe ser un numero mayor que cero.' }, 400);
   }
 
-  await writeFile(getExchangeRateFilePath(), `${JSON.stringify({ rate }, null, 2)}\n`, 'utf-8');
+  await saveExchangeRate(rate);
 
   return jsonResponse({ success: true, message: 'Tasa actualizada.', rate }, 200);
 };

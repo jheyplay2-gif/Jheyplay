@@ -1,7 +1,9 @@
 import type { APIRoute } from 'astro';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { getMergedGames } from '../../../data/catalog';
+import { appendOrder, listOrders, type OrderRecord } from '../../../data/store';
+import { isDatabaseConfigured } from '../../../lib/db';
 
 export const prerender = false;
 
@@ -13,7 +15,6 @@ interface OrderInput {
   receiptFile?: File | null;
 }
 
-const ordersFilePath = join(process.cwd(), 'data', 'orders.json');
 const receiptsDirPath = join(process.cwd(), 'public', 'receipts');
 const MAX_RECEIPT_SIZE_BYTES = 5 * 1024 * 1024;
 const ORDER_ID_PREFIX = 'JP-';
@@ -78,6 +79,12 @@ const jsonResponse = (body: Record<string, unknown>, status: number) =>
 
 const getStringField = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
 
+const normalizeLookupText = (value: string) =>
+  value
+    .normalize('NFKC')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 const parseOrderBody = async (request: Request): Promise<OrderInput | null> => {
   const contentType = request.headers.get('content-type') ?? '';
 
@@ -125,16 +132,6 @@ const saveReceipt = async (receiptFile: File, orderId: string): Promise<string> 
   return `/receipts/${fileName}`;
 };
 
-const parseOrdersFile = async () => {
-  try {
-    const content = await readFile(ordersFilePath, 'utf-8');
-    const parsed = JSON.parse(content);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
 const generateOrderId = (orders: Array<{ id?: unknown }>) => {
   const usedIds = new Set(
     orders
@@ -172,9 +169,9 @@ const generateOrderId = (orders: Array<{ id?: unknown }>) => {
 export const OPTIONS: APIRoute = async () => new Response(null, { status: 204, headers: corsHeaders });
 
 export const GET: APIRoute = async () => {
-  const orders = await parseOrdersFile();
+  const orders = await listOrders();
 
-  if (!Array.isArray(orders) || orders.length === 0) {
+  if (!isDatabaseConfigured() && (!Array.isArray(orders) || orders.length === 0)) {
     return jsonResponse({ success: true, orders: SAMPLE_ORDERS }, 200);
   }
 
@@ -207,12 +204,15 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ success: false, message: 'Juego no encontrado.' }, 404);
   }
 
-  const product = game.products.find((item) => item.label === productLabel && item.active);
+  const normalizedProductLabel = normalizeLookupText(productLabel);
+  const product = game.products.find(
+    (item) => item.active && normalizeLookupText(item.label) === normalizedProductLabel,
+  );
   if (!product) {
     return jsonResponse({ success: false, message: 'Producto no valido para este juego.' }, 400);
   }
 
-  const orders = await parseOrdersFile();
+  const orders = await listOrders();
   let orderId = '';
   try {
     orderId = generateOrderId(orders);
@@ -230,7 +230,7 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ success: false, message }, 400);
   }
 
-  const order = {
+  const order: OrderRecord = {
     id: orderId,
     createdAt: new Date().toISOString(),
     gameSlug,
@@ -242,8 +242,7 @@ export const POST: APIRoute = async ({ request }) => {
     product,
   };
 
-  orders.push(order);
-  await writeFile(ordersFilePath, `${JSON.stringify(orders, null, 2)}\n`, 'utf-8');
+  await appendOrder(order);
 
   return jsonResponse(
     {
